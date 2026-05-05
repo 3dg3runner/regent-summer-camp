@@ -1,0 +1,50 @@
+<section class="hero">
+  <h1>STEM Summer Camp at Regent University</h1>
+  <p class="lede">A week of hands-on science, technology, engineering, and math for grades 6&ndash;12. Sign up below &mdash; spots fill fast.</p>
+  <% if (!currentUser) { %>
+    <div class="hero-cta">
+      <a href="/signup" class="btn btn-primary">Create an account</a>
+      <a href="/login" class="btn btn-secondary">Sign in</a>
+    </div>
+  <% } else { %>
+    <div class="hero-cta">
+      <a href="/dashboard" class="btn btn-primary">Go to dashboard</a>
+      <a href="/camps" class="btn btn-secondary">Browse camps</a>
+    </div>
+  <% } %>
+</section>
+
+<% if (camps.length === 0) { %>
+  <section class="card">
+    <h2>No open camps yet</h2>
+    <p>Check back soon &mdash; new camps are added every spring.</p>
+  </section>
+<% } else { %>
+  <section>
+    <h2>Open Camps</h2>
+    <div class="card-grid">
+      <% camps.forEach(camp => { %>
+        <article class="card">
+          <h3><%= camp.name %></h3>
+          <p class="muted"><%= camp.start_date %> &ndash; <%= camp.end_date %></p>
+          <% if (camp.location) { %><p class="muted">📍 <%= camp.location %></p><% } %>
+          <p>Grades <%= camp.grade_min %>&ndash;<%= camp.grade_max %></p>
+          <p class="capacity-bar">
+            <strong><%= camp.active_count %>/<%= camp.capacity %></strong> enrolled
+            <% if (camp.waitlist_count > 0) { %>
+              <span class="badge">+<%= camp.waitlist_count %> waitlist</span>
+            <% } %>
+          </p>
+          <% if (camp.description) { %>
+            <p><%= camp.description %></p>
+          <% } %>
+          <% if (currentUser) { %>
+            <a href="/camps/<%= camp.id %>" class="btn btn-primary btn-sm">Register</a>
+          <% } else { %>
+            <a href="/signup" class="btn btn-primary btn-sm">Sign up to register</a>
+          <% } %>
+        </article>
+      <% }) %>
+    </div>
+  </section>
+<% } %>

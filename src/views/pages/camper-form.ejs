@@ -1,0 +1,59 @@
+<div class="form-card">
+  <h1><%= title %></h1>
+
+  <% if (errors.length > 0) { %>
+    <div class="error-box">
+      <ul><% errors.forEach(e => { %><li><%= e %></li><% }) %></ul>
+    </div>
+  <% } %>
+
+  <form method="post" action="<%= action %>">
+    <div class="form-row">
+      <label>
+        First name
+        <input type="text" name="first_name" value="<%= camper.first_name || '' %>" required>
+      </label>
+      <label>
+        Last name
+        <input type="text" name="last_name" value="<%= camper.last_name || '' %>" required>
+      </label>
+    </div>
+
+    <div class="form-row">
+      <label>
+        Date of birth
+        <input type="date" name="date_of_birth" value="<%= camper.date_of_birth || '' %>" required>
+      </label>
+      <label>
+        Grade (in fall)
+        <input type="number" name="grade" min="1" max="12" value="<%= camper.grade || '' %>" required>
+      </label>
+    </div>
+
+    <label>
+      Allergies (or "none")
+      <input type="text" name="allergies" value="<%= camper.allergies || '' %>">
+    </label>
+
+    <label>
+      Medical notes (optional)
+      <textarea name="medical_notes" rows="3"><%= camper.medical_notes || '' %></textarea>
+    </label>
+
+    <div class="form-row">
+      <label>
+        Emergency contact name
+        <input type="text" name="emergency_contact_name" value="<%= camper.emergency_contact_name || '' %>" required>
+      </label>
+      <label>
+        Emergency contact phone
+        <input type="tel" name="emergency_contact_phone" value="<%= camper.emergency_contact_phone || '' %>" required>
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <a href="/dashboard" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary">Save camper</button>
+    </div>
+  </form>
+</div>

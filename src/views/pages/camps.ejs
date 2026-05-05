@@ -1,0 +1,24 @@
+<h1>Browse Camps</h1>
+
+<% if (camps.length === 0) { %>
+  <p class="muted">No open camps right now &mdash; check back later.</p>
+<% } else { %>
+  <div class="card-grid">
+    <% camps.forEach(camp => { %>
+      <article class="card">
+        <h3><%= camp.name %></h3>
+        <p class="muted"><%= camp.start_date %> &ndash; <%= camp.end_date %></p>
+        <% if (camp.location) { %><p class="muted">📍 <%= camp.location %></p><% } %>
+        <p>Grades <%= camp.grade_min %>&ndash;<%= camp.grade_max %></p>
+        <p><strong><%= camp.active_count %>/<%= camp.capacity %></strong> enrolled<% if (camp.waitlist_count > 0) { %> &middot; <%= camp.waitlist_count %> waitlisted<% } %></p>
+        <% if (camp.cost_cents > 0) { %>
+          <p><strong>$<%= (camp.cost_cents / 100).toFixed(2) %></strong></p>
+        <% } %>
+        <% if (camp.description) { %>
+          <p><%= camp.description %></p>
+        <% } %>
+        <a href="/camps/<%= camp.id %>" class="btn btn-primary btn-sm">Register</a>
+      </article>
+    <% }) %>
+  </div>
+<% } %>

@@ -1,0 +1,93 @@
+<h1>My Dashboard</h1>
+
+<section class="dash-section">
+  <div class="section-head">
+    <h2>My Campers</h2>
+    <a href="/campers/new" class="btn btn-primary btn-sm">+ Add camper</a>
+  </div>
+  <% if (campers.length === 0) { %>
+    <p class="muted">No campers yet. Add one to start registering for camps.</p>
+  <% } else { %>
+    <div class="card-grid">
+      <% campers.forEach(camper => { %>
+        <article class="card">
+          <h3><%= camper.first_name %> <%= camper.last_name %></h3>
+          <p class="muted">Grade <%= camper.grade %> &middot; Born <%= camper.date_of_birth %></p>
+          <% if (camper.allergies) { %>
+            <p><strong>Allergies:</strong> <%= camper.allergies %></p>
+          <% } %>
+          <p class="muted">Emergency contact: <%= camper.emergency_contact_name %></p>
+          <a href="/campers/<%= camper.id %>/edit">Edit</a>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<section class="dash-section">
+  <div class="section-head">
+    <h2>My Registrations</h2>
+    <a href="/camps" class="btn btn-primary btn-sm">Browse camps</a>
+  </div>
+  <% if (registrations.length === 0) { %>
+    <p class="muted">No registrations yet. Browse the open camps to sign up.</p>
+  <% } else { %>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Camper</th>
+          <th>Camp</th>
+          <th>Dates</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% registrations.forEach(reg => { %>
+          <tr>
+            <td><%= reg.first_name %> <%= reg.last_name %></td>
+            <td><%= reg.camp_name %></td>
+            <td><%= reg.start_date %> – <%= reg.end_date %></td>
+            <td>
+              <span class="status-badge status-<%= reg.status %>">
+                <%= reg.status %><% if (reg.status === 'waitlist') { %> #<%= reg.waitlist_pos %><% } %>
+              </span>
+            </td>
+            <td>
+              <% if (reg.status === 'active' || reg.status === 'waitlist') { %>
+                <details class="inline-form">
+                  <summary>Withdraw</summary>
+                  <form method="post" action="/registrations/<%= reg.id %>/withdraw">
+                    <label>
+                      Reason (optional)
+                      <input type="text" name="reason" placeholder="Schedule conflict, illness, etc.">
+                    </label>
+                    <button type="submit" class="btn btn-danger btn-sm">Confirm withdrawal</button>
+                  </form>
+                </details>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+
+<% if (openCamps.length > 0) { %>
+  <section class="dash-section">
+    <div class="section-head">
+      <h2>Open Camps</h2>
+    </div>
+    <div class="card-grid">
+      <% openCamps.forEach(camp => { %>
+        <article class="card">
+          <h3><%= camp.name %></h3>
+          <p class="muted"><%= camp.start_date %> – <%= camp.end_date %></p>
+          <p><strong><%= camp.active_count %>/<%= camp.capacity %></strong> enrolled<% if (camp.waitlist_count > 0) { %> &middot; <%= camp.waitlist_count %> waitlisted<% } %></p>
+          <a href="/camps/<%= camp.id %>" class="btn btn-primary btn-sm">Register</a>
+        </article>
+      <% }) %>
+    </div>
+  </section>
+<% } %>

@@ -1,0 +1,37 @@
+<a href="/admin" class="back-link">&larr; Back to admin</a>
+<h1>Email Activity</h1>
+<p class="muted">The 100 most recent emails sent by the system, including delivery status. Useful for confirming that confirmations actually went out.</p>
+
+<% if (emails.length === 0) { %>
+  <p class="muted">No emails sent yet.</p>
+<% } else { %>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Sent at</th>
+        <th>To</th>
+        <th>Subject</th>
+        <th>Template</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% emails.forEach(email => { %>
+        <tr>
+          <td><small><%= email.sent_at %></small></td>
+          <td><%= email.recipient %></td>
+          <td><%= email.subject %></td>
+          <td><span class="muted"><%= email.template || '—' %></span></td>
+          <td>
+            <span class="status-badge status-<%= email.status === 'sent' ? 'active' : 'dropped' %>">
+              <%= email.status %>
+            </span>
+            <% if (email.error) { %>
+              <br><small class="muted"><%= email.error %></small>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>

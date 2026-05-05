@@ -1,0 +1,2 @@
+# This directory holds the SQLite database file at runtime.
+# The .db files themselves are .gitignored.

@@ -1,0 +1,68 @@
+<a href="/admin" class="back-link">&larr; Back to admin</a>
+
+<div class="section-head">
+  <h1><%= camp.name %></h1>
+  <a href="/admin/camps/<%= camp.id %>/edit" class="btn btn-secondary btn-sm">Edit camp</a>
+</div>
+
+<p class="muted"><%= camp.start_date %> &ndash; <%= camp.end_date %> &middot; Grades <%= camp.grade_min %>&ndash;<%= camp.grade_max %></p>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-value"><%= activeCount %>/<%= camp.capacity %></div>
+    <div class="stat-label">Enrolled</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value"><%= waitlistCount %></div>
+    <div class="stat-label">Waitlist</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value"><%= camp.is_open ? 'Open' : 'Closed' %></div>
+    <div class="stat-label">Status</div>
+  </div>
+</div>
+
+<h2>Roster</h2>
+<% if (registrations.length === 0) { %>
+  <p class="muted">No registrations yet.</p>
+<% } else { %>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Camper</th>
+        <th>Parent</th>
+        <th>Status</th>
+        <th>Registered</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% registrations.forEach(reg => { %>
+        <tr>
+          <td><strong><%= reg.first_name %> <%= reg.last_name %></strong></td>
+          <td>
+            <%= reg.parent_name %><br>
+            <small class="muted"><%= reg.parent_email %><% if (reg.parent_phone) { %> &middot; <%= reg.parent_phone %><% } %></small>
+          </td>
+          <td>
+            <span class="status-badge status-<%= reg.status %>">
+              <%= reg.status %><% if (reg.status === 'waitlist') { %> #<%= reg.waitlist_pos %><% } %>
+            </span>
+            <% if (reg.drop_reason) { %>
+              <br><small class="muted">"<%= reg.drop_reason %>"</small>
+            <% } %>
+          </td>
+          <td><small class="muted"><%= reg.registered_at %></small></td>
+          <td>
+            <% if (reg.status === 'active' || reg.status === 'waitlist') { %>
+              <form method="post" action="/admin/registrations/<%= reg.id %>/remove" class="inline" onsubmit="return confirm('Remove this registration? If they were enrolled, the next waitlisted camper will be auto-promoted.')">
+                <input type="hidden" name="reason" value="Removed by administrator">
+                <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+              </form>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>

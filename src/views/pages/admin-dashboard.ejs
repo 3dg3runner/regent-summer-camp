@@ -1,0 +1,63 @@
+<h1>Admin Dashboard</h1>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-value"><%= camps.length %></div>
+    <div class="stat-label">Camps</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value"><%= userCount %></div>
+    <div class="stat-label">Users</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value"><%= adminCount %></div>
+    <div class="stat-label">Admins</div>
+  </div>
+</div>
+
+<section class="dash-section">
+  <div class="section-head">
+    <h2>Camps</h2>
+    <div>
+      <a href="/admin/emails" class="btn btn-secondary btn-sm">Email log</a>
+      <a href="/admin/camps/new" class="btn btn-primary btn-sm">+ New camp</a>
+    </div>
+  </div>
+
+  <% if (camps.length === 0) { %>
+    <p class="muted">No camps yet. Create the first one.</p>
+  <% } else { %>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Dates</th>
+          <th>Grades</th>
+          <th>Enrolled</th>
+          <th>Waitlist</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% camps.forEach(camp => { %>
+          <tr>
+            <td><a href="/admin/camps/<%= camp.id %>"><strong><%= camp.name %></strong></a></td>
+            <td><%= camp.start_date %> – <%= camp.end_date %></td>
+            <td><%= camp.grade_min %>–<%= camp.grade_max %></td>
+            <td><%= camp.active_count %>/<%= camp.capacity %></td>
+            <td><%= camp.waitlist_count %></td>
+            <td>
+              <span class="status-badge status-<%= camp.is_open ? 'active' : 'dropped' %>">
+                <%= camp.is_open ? 'open' : 'closed' %>
+              </span>
+            </td>
+            <td>
+              <a href="/admin/camps/<%= camp.id %>/edit">Edit</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</section>

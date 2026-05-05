@@ -1,0 +1,34 @@
+<div class="form-card">
+  <h1>Create Account</h1>
+  <p class="muted">Already have one? <a href="/login">Sign in</a> instead.</p>
+
+  <% if (errors.length > 0) { %>
+    <div class="error-box">
+      <ul><% errors.forEach(e => { %><li><%= e %></li><% }) %></ul>
+    </div>
+  <% } %>
+
+  <form method="post" action="/signup" novalidate>
+    <label>
+      Full name
+      <input type="text" name="full_name" value="<%= form.full_name || '' %>" required>
+    </label>
+    <label>
+      Email
+      <input type="email" name="email" value="<%= form.email || '' %>" required autocomplete="email">
+    </label>
+    <label>
+      Phone (optional)
+      <input type="tel" name="phone" value="<%= form.phone || '' %>" autocomplete="tel">
+    </label>
+    <label>
+      Password (8+ characters)
+      <input type="password" name="password" required autocomplete="new-password" minlength="8">
+    </label>
+    <label>
+      Confirm password
+      <input type="password" name="password_confirm" required autocomplete="new-password" minlength="8">
+    </label>
+    <button type="submit" class="btn btn-primary">Create account</button>
+  </form>
+</div>

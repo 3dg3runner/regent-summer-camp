@@ -1,0 +1,77 @@
+<div class="form-card">
+  <h1><%= title %></h1>
+
+  <% if (errors.length > 0) { %>
+    <div class="error-box">
+      <ul><% errors.forEach(e => { %><li><%= e %></li><% }) %></ul>
+    </div>
+  <% } %>
+
+  <form method="post" action="<%= action %>">
+    <label>
+      Camp name
+      <input type="text" name="name" value="<%= camp.name || '' %>" required>
+    </label>
+
+    <label>
+      Description
+      <textarea name="description" rows="3"><%= camp.description || '' %></textarea>
+    </label>
+
+    <div class="form-row">
+      <label>
+        Start date
+        <input type="date" name="start_date" value="<%= camp.start_date || '' %>" required>
+      </label>
+      <label>
+        End date
+        <input type="date" name="end_date" value="<%= camp.end_date || '' %>" required>
+      </label>
+    </div>
+
+    <div class="form-row">
+      <label>
+        Capacity
+        <input type="number" name="capacity" min="1" value="<%= camp.capacity || 20 %>" required>
+      </label>
+      <label>
+        Cost (USD)
+        <input type="number" name="cost_dollars" min="0" step="0.01" value="<%= camp.cost_cents ? (camp.cost_cents / 100).toFixed(2) : '0.00' %>">
+      </label>
+    </div>
+
+    <label>
+      Location
+      <input type="text" name="location" value="<%= camp.location || '' %>">
+    </label>
+
+    <div class="form-row">
+      <label>
+        Min grade
+        <input type="number" name="grade_min" min="1" max="12" value="<%= camp.grade_min || 6 %>">
+      </label>
+      <label>
+        Max grade
+        <input type="number" name="grade_max" min="1" max="12" value="<%= camp.grade_max || 12 %>">
+      </label>
+    </div>
+
+    <% if (camp.id) { %>
+      <label class="checkbox">
+        <input type="checkbox" name="is_open" <%= camp.is_open ? 'checked' : '' %>>
+        Camp is open for registration
+      </label>
+    <% } %>
+
+    <div class="form-actions">
+      <a href="/admin" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary">Save camp</button>
+    </div>
+  </form>
+
+  <% if (camp.id) { %>
+    <form method="post" action="/admin/camps/<%= camp.id %>/delete" class="danger-form" onsubmit="return confirm('Delete this camp? This will remove all registrations.')">
+      <button type="submit" class="btn btn-danger btn-sm">Delete camp</button>
+    </form>
+  <% } %>
+</div>

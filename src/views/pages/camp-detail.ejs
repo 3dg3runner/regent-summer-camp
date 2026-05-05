@@ -1,0 +1,55 @@
+<a href="/camps" class="back-link">&larr; All camps</a>
+
+<article class="detail-page">
+  <h1><%= camp.name %></h1>
+  <p class="muted"><%= camp.start_date %> &ndash; <%= camp.end_date %></p>
+  <% if (camp.location) { %><p class="muted">📍 <%= camp.location %></p><% } %>
+  <p>Grades <%= camp.grade_min %>&ndash;<%= camp.grade_max %></p>
+  <% if (camp.cost_cents > 0) { %>
+    <p><strong>Cost:</strong> $<%= (camp.cost_cents / 100).toFixed(2) %></p>
+  <% } %>
+
+  <div class="capacity-display">
+    <div class="capacity-bar-track">
+      <div class="capacity-bar-fill" style="width: <%= Math.min(100, (activeCount / camp.capacity) * 100) %>%"></div>
+    </div>
+    <p>
+      <strong><%= activeCount %>/<%= camp.capacity %></strong> enrolled
+      <% if (waitlistCount > 0) { %>&middot; <%= waitlistCount %> on waitlist<% } %>
+    </p>
+  </div>
+
+  <% if (camp.description) { %>
+    <h2>About this camp</h2>
+    <p><%= camp.description %></p>
+  <% } %>
+
+  <h2>Register a camper</h2>
+  <% if (campers.length === 0) { %>
+    <p>You haven't added any campers yet. <a href="/campers/new">Add a camper</a> first.</p>
+  <% } else if (!camp.is_open) { %>
+    <p class="muted">Registration is closed for this camp.</p>
+  <% } else { %>
+    <% if (activeCount >= camp.capacity) { %>
+      <div class="info-box">
+        This camp is currently full. Registering will add the camper to the waitlist. We'll email you the moment a spot opens up.
+      </div>
+    <% } %>
+    <form method="post" action="/camps/<%= camp.id %>/register" class="form-card">
+      <label>
+        Choose a camper
+        <select name="camper_id" required>
+          <option value="">— Select —</option>
+          <% campers.forEach(c => { %>
+            <option value="<%= c.id %>">
+              <%= c.first_name %> <%= c.last_name %> (Grade <%= c.grade %>)
+            </option>
+          <% }) %>
+        </select>
+      </label>
+      <button type="submit" class="btn btn-primary">
+        <%= activeCount >= camp.capacity ? 'Add to waitlist' : 'Register' %>
+      </button>
+    </form>
+  <% } %>
+</article>

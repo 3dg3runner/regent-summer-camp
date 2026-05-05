@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> · Regent Summer Camp</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="brand">
+        <span class="brand-mark">RSC</span>
+        <span class="brand-name">Regent Summer Camp</span>
+      </a>
+      <nav class="site-nav">
+        <% if (currentUser) { %>
+          <a href="/dashboard">Dashboard</a>
+          <a href="/camps">Browse Camps</a>
+          <% if (currentUser.role === 'admin') { %>
+            <a href="/admin">Admin</a>
+          <% } %>
+          <span class="nav-user">Hi, <%= currentUser.full_name.split(' ')[0] %></span>
+          <form method="post" action="/logout" class="nav-form">
+            <button type="submit" class="link-button">Sign out</button>
+          </form>
+        <% } else { %>
+          <a href="/about">About</a>
+          <a href="/login">Sign in</a>
+          <a href="/signup" class="btn btn-primary btn-sm">Create account</a>
+        <% } %>
+      </nav>
+    </div>
+  </header>
+
+  <% if (flash) { %>
+    <div class="flash flash-<%= flash.type %>">
+      <div class="container"><%= flash.message %></div>
+    </div>
+  <% } %>
+
+  <main class="container site-main">
+    <%- body %>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2026 Regent University Summer Camp. CSCI 450 Software Engineering Project.</p>
+      <p>Built by Spencer Kotrosa, Steven Copeland, Ethan Dickinson, Jaden Abbott, and Luke Lacy.</p>
+    </div>
+  </footer>
+</body>
+</html>
