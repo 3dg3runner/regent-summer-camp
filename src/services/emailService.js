@@ -1,11 +1,18 @@
 /**
  * Email service.
  *
- * In production (when SMTP_HOST is set) this sends real email through Nodemailer.
- * In development (no SMTP credentials configured) it falls back to logging to the
- * console — meaning the system is fully testable end-to-end without ever needing
- * a real mail server. Every send is recorded to the email_log table so admins can
- * audit what was delivered, what bounced, and replay the queue if needed.
+ * Three delivery modes, picked at runtime in this priority order:
+ *   1. Resend HTTPS API   — when RESEND_API_KEY is set. Required for Railway,
+ *                           which blocks all outbound SMTP on Free/Hobby plans.
+ *                           Uses port 443 (HTTPS) so it always gets through.
+ *   2. SMTP (Nodemailer)  — when SMTP_HOST is set. Useful for local development
+ *                           and for any host that doesn't block SMTP.
+ *   3. Console            — fallback. Writes the email to stdout so you can
+ *                           read it during local dev without configuring SMTP.
+ *
+ * Every send is recorded to the email_log table regardless of mode, so admins
+ * can audit what was delivered, what bounced, and (in future work) replay
+ * failed sends.
  *
  * Templates live in this file as plain functions returning { subject, text, html }.
  * Keeping them in code (as opposed to a templating engine) makes it trivial to
@@ -15,12 +22,50 @@
 const nodemailer = require('nodemailer');
 const db = require('../config/database');
 
-const FROM = process.env.EMAIL_FROM || 'Regent Summer Camp <noreply@regent.edu>';
+const FROM = process.env.EMAIL_FROM || 'Regent Summer Camp <onboarding@resend.dev>';
+
+// -------- Transport: Resend HTTPS API ------------------------------------
+
+/**
+ * Send an email via Resend's HTTPS API. Returns nothing on success; throws on
+ * any non-2xx response so the caller's try/catch can log the failure normally.
+ *
+ * Why we use this on Railway: Railway blocks all outbound SMTP ports on the
+ * Free, Trial, and Hobby plans (and intermittently on Pro). HTTPS to port 443
+ * is always allowed, so the API path is the only reliable way to send email
+ * from a Railway-hosted service unless you upgrade to a paid plan AND get
+ * lucky with their firewall policy.
+ */
+async function sendViaResend({ to, subject, text, html }) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      from: FROM,
+      to: [to],
+      subject,
+      text,
+      html
+    })
+  });
+  if (!response.ok) {
+    // Resend returns a JSON body with `message` and `name` on errors.
+    const body = await response.text();
+    throw new Error(`Resend API ${response.status}: ${body}`);
+  }
+  return response.json();
+}
+
+// -------- Transport: SMTP (Nodemailer) -----------------------------------
 
 let transporter = null;
 function getTransporter() {
   if (transporter) return transporter;
-  if (!process.env.SMTP_HOST) return null; // console mode
+  if (!process.env.SMTP_HOST) return null;
 
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -34,6 +79,8 @@ function getTransporter() {
   return transporter;
 }
 
+// -------- Logging --------------------------------------------------------
+
 function logEmail({ recipient, subject, body, template, status = 'sent', error = null }) {
   db.prepare(`
     INSERT INTO email_log (recipient, subject, body, template, status, error)
@@ -41,20 +88,26 @@ function logEmail({ recipient, subject, body, template, status = 'sent', error =
   `).run(recipient, subject, body, template, status, error);
 }
 
+// -------- Top-level send -------------------------------------------------
+
 async function sendEmail({ to, subject, text, html, template }) {
-  const t = getTransporter();
   try {
-    if (t) {
-      await t.sendMail({ from: FROM, to, subject, text, html });
+    if (process.env.RESEND_API_KEY) {
+      await sendViaResend({ to, subject, text, html });
     } else {
-      // Console mode — the most useful "fake" because it's actually visible.
-      console.log('\n[EMAIL]'.padEnd(80, '='));
-      console.log(`To:      ${to}`);
-      console.log(`From:    ${FROM}`);
-      console.log(`Subject: ${subject}`);
-      console.log('-'.repeat(80));
-      console.log(text);
-      console.log('='.repeat(80) + '\n');
+      const t = getTransporter();
+      if (t) {
+        await t.sendMail({ from: FROM, to, subject, text, html });
+      } else {
+        // Console mode — the most useful "fake" because it's actually visible.
+        console.log('\n[EMAIL]'.padEnd(80, '='));
+        console.log(`To:      ${to}`);
+        console.log(`From:    ${FROM}`);
+        console.log(`Subject: ${subject}`);
+        console.log('-'.repeat(80));
+        console.log(text);
+        console.log('='.repeat(80) + '\n');
+      }
     }
     logEmail({ recipient: to, subject, body: text, template, status: 'sent' });
     return { ok: true };
@@ -159,6 +212,25 @@ Visit your dashboard any time to make changes.
 
 — Regent Summer Camp`;
     return { subject, text, html: text.replace(/\n/g, '<br>') };
+  },
+
+  verifyEmail({ user, verificationUrl }) {
+    const subject = 'Please verify your email address';
+    const text =
+`Hi ${user.full_name},
+
+Thanks for creating an account at Regent Summer Camp. To finish setting up, please confirm your email address by clicking the link below:
+
+${verificationUrl}
+
+This link will expire in 24 hours. If it expires before you can use it, log in and click "Resend verification email" on your dashboard to get a fresh one.
+
+You can sign in and add campers right away, but you'll need to verify your email before you can register a camper for a camp.
+
+If you didn't create this account, you can safely ignore this message — no further emails will be sent.
+
+— Regent Summer Camp`;
+    return { subject, text, html: text.replace(/\n/g, '<br>') };
   }
 };
 
@@ -188,6 +260,11 @@ const EmailService = {
   async sendWelcome({ user }) {
     const { subject, text, html } = templates.welcome({ user });
     return sendEmail({ to: user.email, subject, text, html, template: 'welcome' });
+  },
+
+  async sendVerifyEmail({ user, verificationUrl }) {
+    const { subject, text, html } = templates.verifyEmail({ user, verificationUrl });
+    return sendEmail({ to: user.email, subject, text, html, template: 'verify-email' });
   },
 
   // Exposed for tests & admin screens.
